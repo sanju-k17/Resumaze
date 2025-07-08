@@ -1,0 +1,242 @@
+{% extends "base.html" %}
+
+{% block title %}Analysis Results - AI Resume Analyzer{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+    <!-- Header -->
+    <div class="bg-white rounded-2xl shadow-xl p-8">
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900 mb-2">
+                    <i class="fas fa-chart-line mr-2"></i>Analysis Results
+                </h1>
+                <p class="text-gray-600">{{ analysis.filename }} • {{ analysis.job_role }}</p>
+            </div>
+            <div class="text-right">
+                <div class="text-4xl font-bold text-blue-600 mb-1">{{ analysis.overall_score|round(1) }}%</div>
+                <div class="text-sm text-gray-500">Overall Score</div>
+            </div>
+        </div>
+        
+        <!-- Action Buttons -->
+        <div class="flex flex-wrap gap-4">
+            <a href="{{ url_for('main.download_report', analysis_id=analysis.id) }}" 
+               class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition">
+                <i class="fas fa-download mr-2"></i>Download PDF Report
+            </a>
+            <button onclick="emailReport()" 
+                    class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition">
+                <i class="fas fa-envelope mr-2"></i>Email Report
+            </button>
+            <a href="{{ url_for('main.index') }}" 
+               class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg font-medium transition">
+                <i class="fas fa-plus mr-2"></i>Analyze Another Resume
+            </a>
+        </div>
+    </div>
+
+    <!-- Score Breakdown -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="bg-white rounded-xl shadow-lg p-6 card-hover">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-gray-900">Keyword Match</h3>
+                <i class="fas fa-key text-2xl text-blue-600"></i>
+            </div>
+            <div class="text-3xl font-bold text-blue-600 mb-2">{{ analysis.keyword_score|round(1) }}%</div>
+            <div class="w-full bg-gray-200 rounded-full h-2">
+                <div class="bg-blue-600 h-2 rounded-full" style="width: {{ analysis.keyword_score }}%"></div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-xl shadow-lg p-6 card-hover">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-gray-900">ATS Score</h3>
+                <i class="fas fa-robot text-2xl text-green-600"></i>
+            </div>
+            <div class="text-3xl font-bold text-green-600 mb-2">{{ analysis.ats_score|round(1) }}%</div>
+            <div class="w-full bg-gray-200 rounded-full h-2">
+                <div class="bg-green-600 h-2 rounded-full" style="width: {{ analysis.ats_score }}%"></div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-xl shadow-lg p-6 card-hover">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-gray-900">Overall Quality</h3>
+                <i class="fas fa-star text-2xl text-yellow-600"></i>
+            </div>
+            <div class="text-3xl font-bold text-yellow-600 mb-2">{{ analysis.overall_score|round(1) }}%</div>
+            <div class="w-full bg-gray-200 rounded-full h-2">
+                <div class="bg-yellow-600 h-2 rounded-full" style="width: {{ analysis.overall_score }}%"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts -->
+    {% if chart_paths %}
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {% if chart_paths.score_breakdown %}
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <h3 class="text-xl font-bold text-gray-900 mb-4">Score Breakdown</h3>
+            <iframe src="{{ url_for('static', filename=chart_paths.score_breakdown) }}" 
+                    width="100%" height="400" frameborder="0"></iframe>
+        </div>
+        {% endif %}
+        
+        {% if chart_paths.keywords_match %}
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <h3 class="text-xl font-bold text-gray-900 mb-4">Keyword Analysis</h3>
+            <iframe src="{{ url_for('static', filename=chart_paths.keywords_match) }}" 
+                    width="100%" height="400" frameborder="0"></iframe>
+        </div>
+        {% endif %}
+    </div>
+    
+    {% if chart_paths.skills_radar %}
+    <div class="bg-white rounded-xl shadow-lg p-6">
+        <h3 class="text-xl font-bold text-gray-900 mb-4">Skills Profile</h3>
+        <iframe src="{{ url_for('static', filename=chart_paths.skills_radar) }}" 
+                width="100%" height="450" frameborder="0"></iframe>
+    </div>
+    {% endif %}
+    {% endif %}
+
+    <!-- Keyword Analysis -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Matched Keywords -->
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <h3 class="text-xl font-bold text-gray-900 mb-4">
+                <i class="fas fa-check-circle text-green-600 mr-2"></i>Matched Keywords
+            </h3>
+            {% set matched_keywords = analysis.get_matched_keywords() %}
+            {% if matched_keywords %}
+                <div class="flex flex-wrap gap-2">
+                    {% for keyword in matched_keywords %}
+                        <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
+                            {{ keyword }}
+                        </span>
+                    {% endfor %}
+                </div>
+                <p class="text-sm text-gray-600 mt-4">
+                    Great! Your resume contains {{ matched_keywords|length }} relevant keywords.
+                </p>
+            {% else %}
+                <p class="text-gray-500">No keywords matched. Consider adding more relevant terms.</p>
+            {% endif %}
+        </div>
+
+        <!-- Missing Keywords -->
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <h3 class="text-xl font-bold text-gray-900 mb-4">
+                <i class="fas fa-exclamation-triangle text-red-600 mr-2"></i>Missing Keywords
+            </h3>
+            {% set missing_keywords = analysis.get_missing_keywords() %}
+            {% if missing_keywords %}
+                <div class="flex flex-wrap gap-2">
+                    {% for keyword in missing_keywords %}
+                        <span class="bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm font-medium">
+                            {{ keyword }}
+                        </span>
+                    {% endfor %}
+                </div>
+                <p class="text-sm text-gray-600 mt-4">
+                    Consider adding these {{ missing_keywords|length }} keywords to improve your match score.
+                </p>
+            {% else %}
+                <p class="text-green-600 font-medium">
+                    <i class="fas fa-check mr-2"></i>All keywords found! Excellent job.
+                </p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- AI Suggestions -->
+    {% if analysis.ai_suggestions %}
+    <div class="bg-white rounded-xl shadow-lg p-6">
+        <h3 class="text-xl font-bold text-gray-900 mb-4">
+            <i class="fas fa-lightbulb text-yellow-600 mr-2"></i>AI-Powered Recommendations
+        </h3>
+        <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-lg">
+            <div class="prose prose-sm max-w-none">
+                {{ analysis.ai_suggestions|replace('\n', '<br>')|safe }}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Resume Preview -->
+    <div class="bg-white rounded-xl shadow-lg p-6">
+        <h3 class="text-xl font-bold text-gray-900 mb-4">
+            <i class="fas fa-file-alt text-gray-600 mr-2"></i>Resume Content Preview
+        </h3>
+        <div class="bg-gray-50 p-4 rounded-lg max-h-64 overflow-y-auto">
+            <pre class="text-sm text-gray-700 whitespace-pre-wrap">{{ analysis.resume_text[:1000] }}{% if analysis.resume_text|length > 1000 %}...{% endif %}</pre>
+        </div>
+    </div>
+</div>
+
+<!-- Email Modal -->
+<div id="email-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-lg p-8 max-w-md w-full mx-4">
+        <h3 class="text-lg font-semibold mb-4">Email Report</h3>
+        <form id="email-form">
+            <div class="mb-4">
+                <label for="email-input" class="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
+                <input type="email" id="email-input" name="email" required 
+                       value="{{ analysis.email or '' }}"
+                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            </div>
+            <div class="flex justify-end space-x-4">
+                <button type="button" onclick="closeEmailModal()" 
+                        class="px-4 py-2 text-gray-600 hover:text-gray-800">Cancel</button>
+                <button type="submit" 
+                        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">Send Report</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function emailReport() {
+    document.getElementById('email-modal').classList.remove('hidden');
+}
+
+function closeEmailModal() {
+    document.getElementById('email-modal').classList.add('hidden');
+}
+
+document.getElementById('email-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const email = document.getElementById('email-input').value;
+    
+    try {
+        const response = await fetch(`/email-report/{{ analysis.id }}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `email=${encodeURIComponent(email)}`
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('Report sent successfully!');
+            closeEmailModal();
+        } else {
+            alert(result.error || 'Failed to send email');
+        }
+    } catch (error) {
+        alert('Failed to send email: ' + error.message);
+    }
+});
+
+// Close modal when clicking outside
+document.getElementById('email-modal').addEventListener('click', (e) => {
+    if (e.target.id === 'email-modal') {
+        closeEmailModal();
+    }
+});
+</script>
+{% endblock %}
