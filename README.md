@@ -28,39 +28,7 @@ A comprehensive, AI-powered resume analysis web application built entirely with 
 14. **🎨 Interactive Charts** - Plotly-powered visualizations
 15. **🗄️ Data Persistence** - SQLite database for storing analyses
 
-## 🏗️ Architecture
 
-\`\`\`
-AI Resume Analyzer/
-├── 📁 app/
-│   ├── 📄 __init__.py          # Flask app factory
-│   ├── 📄 models.py            # Database models
-│   ├── 📄 routes.py            # Web routes and API endpoints
-│   ├── 📁 templates/           # Jinja2 HTML templates
-│   │   ├── 📄 base.html        # Base template with navigation
-│   │   ├── 📄 index.html       # Home page with upload form
-│   │   ├── 📄 results.html     # Analysis results display
-│   │   ├── 📄 dashboard.html   # Historical dashboard
-│   │   └── 📄 admin.html       # Admin panel
-│   └── 📁 utils/               # Utility modules
-│       ├── 📄 resume_parser.py # PDF/DOCX text extraction
-│       ├── 📄 ai_analyzer.py   # OpenAI integration
-│       ├── 📄 ats_analyzer.py  # ATS compatibility scoring
-│       ├── 📄 chart_generator.py # Plotly chart generation
-│       ├── 📄 report_generator.py # PDF report creation
-│       ├── 📄 email_sender.py  # SMTP email functionality
-│       └── 📄 data_seeder.py   # Default data seeding
-├── 📁 static/                  # Static assets
-│   ├── 📁 charts/              # Generated chart files
-│   └── 📁 reports/             # Generated PDF reports
-├── 📁 uploads/                 # Temporary file storage
-├── 📁 tests/                   # Unit tests
-├── 📄 main.py                  # Application entry point
-├── 📄 requirements.txt         # Python dependencies
-├── 📄 .env                     # Environment variables
-├── 📄 Dockerfile              # Docker configuration
-└── 📄 README.md               # This file
-\`\`\`
 
 ## 🛠️ Installation Guide for Windows 11
 
